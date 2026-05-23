@@ -5,7 +5,7 @@ const crypto = require("node:crypto");
 
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = __dirname;
-const DATA_DIR = path.join(ROOT, "data");
+const DATA_DIR = process.env.VERCEL ? path.join("/tmp", "recording-app") : path.join(ROOT, "data");
 const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
 const DB_PATH = path.join(DATA_DIR, "db.json");
 
@@ -221,7 +221,7 @@ async function serveStatic(req, res, url) {
   }
 }
 
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
   try {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     if (url.pathname.startsWith("/api/")) {
@@ -232,10 +232,16 @@ const server = http.createServer(async (req, res) => {
   } catch (error) {
     sendError(res, 500, error.message || "Server error");
   }
-});
+}
 
-ensureStorage().then(() => {
-  server.listen(PORT, () => {
-    console.log(`Recording transcription app: http://localhost:${PORT}`);
+if (process.env.VERCEL) {
+  module.exports = handleRequest;
+} else {
+  const server = http.createServer(handleRequest);
+
+  ensureStorage().then(() => {
+    server.listen(PORT, () => {
+      console.log(`Recording transcription app: http://localhost:${PORT}`);
+    });
   });
-});
+}
