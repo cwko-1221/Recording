@@ -1,5 +1,7 @@
 const API_BASE = "";
 const FALLBACK_STORAGE_KEY = "speech-school-state-v2";
+const TEACHER_SESSION_KEY = "speech-school-teacher-password";
+const STUDENT_SESSION_KEY = "speech-school-student-session";
 
 const text = {
   defaultStudent: "\u9673\u8a60\u6674",
@@ -39,9 +41,9 @@ const initialState = {
 let state = structuredClone(initialState);
 let backendOnline = false;
 let selectedStudentId = null;
-let activeStudentId = null;
-let activeStudentPassword = "";
-let activeTeacherPassword = "";
+let activeStudentId = readStudentSession().studentId || null;
+let activeStudentPassword = readStudentSession().password || "";
+let activeTeacherPassword = sessionStorage.getItem(TEACHER_SESSION_KEY) || "";
 let mediaRecorder = null;
 let audioChunks = [];
 let speechRecognition = null;
@@ -62,8 +64,21 @@ async function api(path, options = {}) {
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },
     ...options,
   });
-  if (!response.ok) throw new Error(`API ${response.status}`);
-  return response.json();
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || `API ${response.status}`);
+  return body;
+}
+
+function readStudentSession() {
+  try {
+    return JSON.parse(sessionStorage.getItem(STUDENT_SESSION_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveStudentSession(studentId, password) {
+  sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify({ studentId, password }));
 }
 
 function loadLocalState() {
@@ -311,9 +326,11 @@ async function startRecording() {
         audioDataUrl,
       });
 
-      selectedStudentId = activeStudentId;
-      recordStatus.textContent = backendOnline ? text.done : text.doneLocal;
-      if (recording) renderAll();
+      if (recording) {
+        selectedStudentId = activeStudentId;
+        recordStatus.textContent = backendOnline ? text.done : text.doneLocal;
+        renderAll();
+      }
     });
 
     speechRecognition = setupSpeechRecognition();
@@ -347,8 +364,9 @@ async function createRecording(payload) {
       });
       state.recordings.unshift(recording);
       return recording;
-    } catch {
-      backendOnline = false;
+    } catch (error) {
+      recordStatus.textContent = `儲存失敗：${error.message}`;
+      return null;
     }
   }
 
@@ -373,8 +391,9 @@ async function saveTranscript(recordingId, transcript) {
         body: JSON.stringify({ transcript, teacherPassword: activeTeacherPassword }),
       });
       return;
-    } catch {
-      backendOnline = false;
+    } catch (error) {
+      alert(`儲存文字失敗：${error.message}`);
+      return;
     }
   }
   saveLocalState();
@@ -413,6 +432,7 @@ document.querySelector("#studentLoginForm").addEventListener("submit", async (ev
   }
   activeStudentId = studentId;
   activeStudentPassword = password;
+  saveStudentSession(studentId, password);
   window.location.hash = "student";
   renderStudentLabel();
 });
@@ -426,6 +446,7 @@ document.querySelector("#teacherLoginForm").addEventListener("submit", async (ev
     return;
   }
   activeTeacherPassword = code;
+  sessionStorage.setItem(TEACHER_SESSION_KEY, code);
   window.location.hash = "teacher";
 });
 
@@ -436,6 +457,11 @@ document.querySelector("#addStudentForm").addEventListener("submit", async (even
   const name = input.value.trim();
   const password = passwordInput.value.trim();
   if (!name || !password) return;
+  if (!activeTeacherPassword) {
+    alert("請先以老師密碼登入。");
+    window.location.hash = "login";
+    return;
+  }
 
   let student;
   if (backendOnline) {
@@ -444,12 +470,14 @@ document.querySelector("#addStudentForm").addEventListener("submit", async (even
         method: "POST",
         body: JSON.stringify({ name, password, teacherPassword: activeTeacherPassword }),
       });
-    } catch {
-      backendOnline = false;
+    } catch (error) {
+      alert(`新增學生失敗：${error.message}`);
+      return;
     }
   }
 
   if (!student) {
+    if (backendOnline) return;
     student = { id: crypto.randomUUID(), name, password };
     state.students.push(student);
     saveLocalState();
@@ -485,8 +513,9 @@ document.querySelector("#seedDemoButton").addEventListener("click", async () => 
   if (backendOnline) {
     try {
       state.recordings.unshift(await api("/api/recordings", { method: "POST", body: JSON.stringify(recording) }));
-    } catch {
-      backendOnline = false;
+    } catch (error) {
+      alert(`載入示範資料失敗：${error.message}`);
+      return;
     }
   }
 
