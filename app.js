@@ -40,6 +40,8 @@ let state = structuredClone(initialState);
 let backendOnline = false;
 let selectedStudentId = null;
 let activeStudentId = null;
+let activeStudentPassword = "";
+let activeTeacherPassword = "";
 let mediaRecorder = null;
 let audioChunks = [];
 let speechRecognition = null;
@@ -301,6 +303,7 @@ async function startRecording() {
 
       const recording = await createRecording({
         studentId: activeStudentId,
+        studentPassword: activeStudentPassword,
         createdAt,
         durationMs,
         transcript: liveTranscript,
@@ -367,7 +370,7 @@ async function saveTranscript(recordingId, transcript) {
     try {
       await api(`/api/recordings/${recordingId}`, {
         method: "PATCH",
-        body: JSON.stringify({ transcript }),
+        body: JSON.stringify({ transcript, teacherPassword: activeTeacherPassword }),
       });
       return;
     } catch {
@@ -409,6 +412,7 @@ document.querySelector("#studentLoginForm").addEventListener("submit", async (ev
     return;
   }
   activeStudentId = studentId;
+  activeStudentPassword = password;
   window.location.hash = "student";
   renderStudentLabel();
 });
@@ -421,6 +425,7 @@ document.querySelector("#teacherLoginForm").addEventListener("submit", async (ev
     alert(text.teacherCodeWrong);
     return;
   }
+  activeTeacherPassword = code;
   window.location.hash = "teacher";
 });
 
@@ -435,7 +440,10 @@ document.querySelector("#addStudentForm").addEventListener("submit", async (even
   let student;
   if (backendOnline) {
     try {
-      student = await api("/api/students", { method: "POST", body: JSON.stringify({ name, password }) });
+      student = await api("/api/students", {
+        method: "POST",
+        body: JSON.stringify({ name, password, teacherPassword: activeTeacherPassword }),
+      });
     } catch {
       backendOnline = false;
     }
@@ -466,6 +474,7 @@ document.querySelector("#seedDemoButton").addEventListener("click", async () => 
   const createdAt = new Intl.DateTimeFormat("zh-HK", { dateStyle: "medium", timeStyle: "short" }).format(new Date());
   const recording = {
     studentId: demoStudent.id,
+    studentPassword: "123456",
     createdAt,
     durationMs: 24000,
     transcript: text.demoTranscript,
