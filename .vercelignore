@@ -1,5 +1,6 @@
 data/
 server.pid
+server.js
 *.log
 .env
 .env.*
