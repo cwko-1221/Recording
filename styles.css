@@ -434,16 +434,46 @@ select {
 
 .student-item {
   display: flex;
+  align-items: stretch;
   justify-content: space-between;
   width: 100%;
   min-height: 46px;
-  padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
+  overflow: hidden;
   background: white;
   color: var(--ink);
-  cursor: pointer;
   font-weight: 800;
+}
+
+.student-select-button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-weight: inherit;
+}
+
+.delete-student-button {
+  width: 44px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: #fff5f4;
+  color: var(--coral);
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.delete-student-button:hover {
+  background: var(--coral);
+  color: white;
 }
 
 .student-item.is-active {

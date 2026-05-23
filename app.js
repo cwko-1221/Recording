@@ -177,16 +177,60 @@ function renderStudentList() {
   studentList.innerHTML = "";
   state.students.forEach((student) => {
     const count = state.recordings.filter((recording) => recording.studentId === student.id).length;
+    const row = document.createElement("div");
+    row.className = `student-item${student.id === selectedStudentId ? " is-active" : ""}`;
+
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `student-item${student.id === selectedStudentId ? " is-active" : ""}`;
+    button.className = "student-select-button";
     button.innerHTML = `<span>${escapeHtml(student.name)}</span><span>${count}</span>`;
     button.addEventListener("click", () => {
       selectedStudentId = student.id;
       renderAll();
     });
-    studentList.append(button);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "delete-student-button";
+    deleteButton.setAttribute("aria-label", `Delete ${student.name}`);
+    deleteButton.textContent = "×";
+    deleteButton.addEventListener("click", () => deleteStudent(student));
+
+    row.append(button, deleteButton);
+    studentList.append(row);
   });
+}
+
+async function deleteStudent(student) {
+  if (!activeTeacherPassword) {
+    alert("請先以老師密碼登入。");
+    window.location.hash = "login";
+    return;
+  }
+
+  const count = state.recordings.filter((recording) => recording.studentId === student.id).length;
+  const message = count
+    ? `確定刪除 ${student.name}？此學生的 ${count} 個錄音也會一併刪除。`
+    : `確定刪除 ${student.name}？`;
+  if (!confirm(message)) return;
+
+  try {
+    await api(`/api/students/${student.id}`, {
+      method: "DELETE",
+      body: JSON.stringify({ teacherPassword: activeTeacherPassword }),
+    });
+    state.students = state.students.filter((item) => item.id !== student.id);
+    state.recordings = state.recordings.filter((recording) => recording.studentId !== student.id);
+    if (selectedStudentId === student.id) selectedStudentId = state.students[0]?.id || null;
+    if (activeStudentId === student.id) {
+      activeStudentId = state.students[0]?.id || null;
+      activeStudentPassword = "";
+      sessionStorage.removeItem(STUDENT_SESSION_KEY);
+    }
+    renderAll();
+  } catch (error) {
+    alert(`刪除學生失敗：${error.message}`);
+  }
 }
 
 function renderTeacherRecordings() {

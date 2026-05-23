@@ -91,6 +91,20 @@ module.exports = async function handler(req, res) {
       return;
     }
 
+    const studentDeleteMatch = /^\/api\/students\/([^/]+)$/.exec(url.pathname);
+    if (req.method === "DELETE" && studentDeleteMatch) {
+      const body = await getBody(req);
+      sendJson(
+        res,
+        200,
+        await rpc("recording_app_delete_student", {
+          input_student_id: studentDeleteMatch[1],
+          teacher_password: String(body.teacherPassword || "")
+        })
+      );
+      return;
+    }
+
     if (req.method === "POST" && url.pathname === "/api/recordings") {
       const body = await getBody(req);
       if (!body.studentId) return sendError(res, 400, "studentId is required");
