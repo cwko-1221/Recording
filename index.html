@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>&#35486;&#38899;&#36681;&#25991;&#23383;&#31995;&#32113;</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#home" aria-label="Back home">
+          <span class="brand-mark">&#32882;</span>
+          <span>&#35486;&#38899;&#36681;&#25991;&#23383;&#31995;&#32113;</span>
+        </a>
+        <nav class="nav-actions" aria-label="Main navigation">
+          <a href="#home">&#39318;&#38913;</a>
+          <a href="#login">&#30331;&#20837;</a>
+          <a href="#teacher">&#32769;&#24107;&#20171;&#38754;</a>
+        </nav>
+      </header>
+
+      <main>
+        <section id="home" class="screen home-screen" aria-labelledby="home-title">
+          <div class="home-copy">
+            <h1 id="home-title">&#35486;&#38899;&#36681;&#25991;&#23383;&#31995;&#32113;</h1>
+            <p>&#23416;&#29983;&#25475;&#25551; QR code &#24460;&#30331;&#20837;&#65292;&#36914;&#20837;&#21934;&#19968;&#37636;&#38899;&#20171;&#38754;&#65307;&#32769;&#24107;&#21487;&#31649;&#29702;&#23416;&#29983;&#12289;&#25773;&#25918;&#37636;&#38899;&#20006;&#26597;&#30475;&#36681;&#25991;&#23383;&#32080;&#26524;&#12290;</p>
+            <div class="home-actions">
+              <a class="button primary" href="#login">&#36914;&#20837;&#30331;&#20837;&#38913;</a>
+              <button class="button ghost" id="seedDemoButton" type="button">&#36617;&#20837;&#31034;&#31684;&#36039;&#26009;</button>
+            </div>
+          </div>
+          <a class="qr-panel" href="#login" aria-label="Scan or click QR code to login">
+            <div class="qr-frame">
+              <img id="qrImage" alt="Login QR code" />
+              <div class="qr-fallback" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+            <span>&#25475;&#25551;&#30331;&#20837;</span>
+          </a>
+        </section>
+
+        <section id="login" class="screen login-screen" aria-labelledby="login-title">
+          <div class="login-panel">
+            <h2 id="login-title">&#30331;&#20837;</h2>
+            <div class="role-grid">
+              <form id="studentLoginForm" class="login-card">
+                <h3>&#23416;&#29983;&#30331;&#20837;</h3>
+                <label for="studentSelect">&#36984;&#25799;&#23416;&#29983;</label>
+                <select id="studentSelect" required></select>
+                <label for="studentPassword">&#23416;&#29983;&#23494;&#30908;</label>
+                <input id="studentPassword" type="password" placeholder="Student password" autocomplete="current-password" required />
+                <button class="button primary" type="submit">&#36914;&#20837;&#23416;&#29983;&#20171;&#38754;</button>
+              </form>
+              <form id="teacherLoginForm" class="login-card">
+                <h3>&#32769;&#24107;&#30331;&#20837;</h3>
+                <label for="teacherCode">&#32769;&#24107;&#23494;&#30908;</label>
+                <input id="teacherCode" type="password" placeholder="Teacher password" autocomplete="off" />
+                <button class="button dark" type="submit">&#36914;&#20837;&#32769;&#24107;&#20171;&#38754;</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <section id="student" class="screen student-screen" aria-labelledby="student-title">
+          <div class="student-recorder">
+            <p id="studentNameLabel" class="student-name">&#23416;&#29983;</p>
+            <h2 id="student-title">&#38283;&#22987;&#37636;&#38899;</h2>
+            <div class="record-orb" id="recordOrb" aria-hidden="true"></div>
+            <button class="record-button" id="recordButton" type="button">&#38283;&#22987;&#37636;&#38899;</button>
+            <p id="recordStatus" class="status-line">&#25353;&#19979;&#24460;&#38283;&#22987;&#37636;&#38899;&#12290;</p>
+          </div>
+        </section>
+
+        <section id="teacher" class="screen teacher-screen" aria-labelledby="teacher-title">
+          <aside class="teacher-sidebar">
+            <div>
+              <h2 id="teacher-title">&#32769;&#24107;&#20171;&#38754;</h2>
+              <p>&#23416;&#29983;&#21517;&#21934;</p>
+            </div>
+            <form id="addStudentForm" class="add-student-form">
+              <label for="newStudentName">&#26032;&#22686;&#23416;&#29983;</label>
+              <div class="add-student-fields">
+                <input id="newStudentName" type="text" placeholder="Student name" required />
+                <input id="newStudentPassword" type="password" placeholder="Student password" required />
+                <button class="icon-button" type="submit" aria-label="Add student">+</button>
+              </div>
+            </form>
+            <div id="studentList" class="student-list" aria-label="Student list"></div>
+          </aside>
+
+          <div class="teacher-main">
+            <div class="teacher-heading">
+              <div>
+                <p id="selectedStudentMeta">&#35531;&#36984;&#25799;&#23416;&#29983;</p>
+                <h2 id="selectedStudentName">&#37636;&#38899;&#32000;&#37636;</h2>
+              </div>
+              <button class="button ghost" id="refreshButton" type="button">&#37325;&#26032;&#36617;&#20837;</button>
+            </div>
+            <div id="recordingsList" class="recordings-list"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="recordingTemplate">
+      <article class="recording-row">
+        <div class="recording-info">
+          <strong></strong>
+          <span></span>
+        </div>
+        <audio controls></audio>
+        <button class="button small transcript-button" type="button">&#36681;&#25104;&#25991;&#23383;</button>
+        <textarea aria-label="Transcript result"></textarea>
+      </article>
+    </template>
+
+    <script src="app.js?v=20260524-password-hide"></script>
+  </body>
+</html>

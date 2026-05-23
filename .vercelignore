@@ -1,0 +1,5 @@
+data/
+server.pid
+*.log
+.env
+.env.*
